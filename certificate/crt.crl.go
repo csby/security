@@ -6,6 +6,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -38,14 +39,16 @@ func (s *CrtCrl) Info() (*RevokedInfo, error) {
 
 		extensions := lst[lstIndex].Extensions
 		if len(extensions) > 0 {
-			s.getExtension(extensions, OidOrganization, &item.Organization)
-			s.getExtension(extensions, OidOrganizationalUnit, &item.OrganizationalUnit)
-			s.getExtension(extensions, OidCommonName, &item.CommonName)
-			s.getExtension(extensions, OidLocality, &item.Locality)
-			s.getExtension(extensions, OidProvince, &item.Province)
-			s.getExtension(extensions, OidStreetAddress, &item.StreetAddress)
-			s.getExtension(extensions, OidNotBefore, &item.NotBefore)
-			s.getExtension(extensions, OidNotAfter, &item.NotAfter)
+			err := s.getExtension(extensions, OidOrganization, &item.Organization)
+			if err != nil {
+			}
+			err = s.getExtension(extensions, OidOrganizationalUnit, &item.OrganizationalUnit)
+			err = s.getExtension(extensions, OidCommonName, &item.CommonName)
+			err = s.getExtension(extensions, OidLocality, &item.Locality)
+			err = s.getExtension(extensions, OidProvince, &item.Province)
+			err = s.getExtension(extensions, OidStreetAddress, &item.StreetAddress)
+			err = s.getExtension(extensions, OidNotBefore, &item.NotBefore)
+			err = s.getExtension(extensions, OidNotAfter, &item.NotAfter)
 		}
 
 		info.Items = append(info.Items, item)
@@ -142,7 +145,10 @@ func (s *CrtCrl) ToFile(path string, caCrt *Crt, caKey *RSAPrivate, thisUpdate, 
 	}
 
 	folder := filepath.Dir(path)
-	os.MkdirAll(folder, 0777)
+	err = os.MkdirAll(folder, 0777)
+	if err != nil {
+		return err
+	}
 
 	file, err := os.Create(path)
 	if err != nil {
@@ -185,7 +191,16 @@ func (s *CrtCrl) ToMemory(caCrt *Crt, caKey *RSAPrivate, thisUpdate, nextUpdate 
 		}
 	}
 
-	return caCrt.certificate.CreateCRL(rand.Reader, caKey.key, s.crl.TBSCertList.RevokedCertificates, thisUpd, nextUpd)
+	data, err := caCrt.certificate.CreateCRL(rand.Reader, caKey.key, s.crl.TBSCertList.RevokedCertificates, thisUpd, nextUpd)
+	if err != nil {
+		return nil, err
+	}
+	block := &pem.Block{
+		Type:  "X509 CRL",
+		Bytes: data,
+	}
+
+	return pem.EncodeToMemory(block), nil
 }
 
 func (s *CrtCrl) getExtension(extensions []pkix.Extension, oid asn1.ObjectIdentifier, v interface{}) error {
