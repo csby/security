@@ -181,6 +181,11 @@ func (s *CrtCrl) ToMemory(caCrt *Crt, caKey *RSAPrivate, thisUpdate, nextUpdate 
 	nextUpd := time.Now().AddDate(1, 0, 0)
 	if nextUpdate != nil {
 		nextUpd = *nextUpdate
+	} else {
+		caNotAfter := caCrt.NotAfter()
+		if caNotAfter != nil {
+			nextUpd = *caNotAfter
+		}
 	}
 
 	if s.crl == nil {
