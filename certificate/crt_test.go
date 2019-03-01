@@ -48,7 +48,7 @@ func TestCrt_End(t *testing.T) {
 func testCreateCA() (*Crt, *RSAPrivate, error) {
 	folder := testFileFolder()
 
-	private := &RSAPrivate{}
+	private := &RSAPrivate{Format: "pkcs8"}
 	err := private.Create(2048)
 	if err != nil {
 		return nil, nil, err

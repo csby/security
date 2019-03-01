@@ -11,10 +11,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type RSAPrivate struct {
 	key *rsa.PrivateKey
+
+	Format string // pkcs1(default) or pkcs8
 }
 
 func (s *RSAPrivate) Key() *rsa.PrivateKey {
@@ -159,7 +162,11 @@ func (s *RSAPrivate) FromFile(path, password string) error {
 
 	key, err := x509.ParsePKCS1PrivateKey(blockData)
 	if err != nil {
-		return err
+		keyResult, err := x509.ParsePKCS8PrivateKey(blockData)
+		if err != nil {
+			return err
+		}
+		key = keyResult.(*rsa.PrivateKey)
 	}
 	s.key = key
 
@@ -167,16 +174,24 @@ func (s *RSAPrivate) FromFile(path, password string) error {
 }
 
 func (s *RSAPrivate) encode(password string) (block *pem.Block, err error) {
+	data := x509.MarshalPKCS1PrivateKey(s.key)
+	if strings.ToLower(s.Format) == "pkcs8" {
+		data, err = x509.MarshalPKCS8PrivateKey(s.key)
+		if err != nil {
+			return
+		}
+	}
+
 	if len(password) > 0 {
 		block, err = x509.EncryptPEMBlock(rand.Reader,
 			"RSA PRIVATE KEY",
-			x509.MarshalPKCS1PrivateKey(s.key),
+			data,
 			[]byte(password),
 			x509.PEMCipherAES256)
 	} else {
 		block = &pem.Block{
 			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(s.key),
+			Bytes: data,
 		}
 	}
 	return
