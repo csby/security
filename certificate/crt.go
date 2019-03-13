@@ -3,6 +3,7 @@ package certificate
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -76,6 +77,17 @@ func (s *Crt) Create(template, parentTemplate *x509.Certificate, publicKey *RSAP
 
 func (s *Crt) FromCertificate(certificate *x509.Certificate) {
 	s.certificate = certificate
+}
+
+func (s *Crt) FromConnectionState(state *tls.ConnectionState) {
+	if state == nil {
+		return
+	}
+	if len(state.PeerCertificates) < 1 {
+		return
+	}
+
+	s.certificate = state.PeerCertificates[0]
 }
 
 func (s *Crt) FromFile(path string) error {

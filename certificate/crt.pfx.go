@@ -57,6 +57,21 @@ func (s *CrtPfx) TlsCertificates() []tls.Certificate {
 	return []tls.Certificate{*s.tlsCertificate}
 }
 
+func (s *CrtPfx) FromTlsCertificate(cert *tls.Certificate) error {
+	if cert == nil {
+		return fmt.Errorf("invalid tls certificate: nil")
+	}
+	s.tlsCertificate = cert
+
+	x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+	if err != nil {
+		return err
+	}
+	s.certificate = x509Cert
+
+	return nil
+}
+
 func (s *CrtPfx) FromFile(filePath, password string) error {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
