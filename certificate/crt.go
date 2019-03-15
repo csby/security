@@ -95,14 +95,19 @@ func (s *Crt) FromFile(path string) error {
 	if err != nil {
 		return err
 	}
+	return s.FromData(data)
+}
+
+func (s *Crt) FromData(data []byte) error {
 	block, _ := pem.Decode(data)
 	if block == nil {
 		return fmt.Errorf("invalid certificate file")
 	}
-	s.certificate, err = x509.ParseCertificate(block.Bytes)
+	certificate, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		return fmt.Errorf("invalid certificate file content: %v", err)
 	}
+	s.certificate = certificate
 
 	return nil
 }

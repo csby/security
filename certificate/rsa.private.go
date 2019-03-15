@@ -147,6 +147,11 @@ func (s *RSAPrivate) FromFile(path, password string) error {
 	if err != nil {
 		return err
 	}
+
+	return s.FromData(data, password)
+}
+
+func (s *RSAPrivate) FromData(data []byte, password string) error {
 	block, _ := pem.Decode(data)
 	if block == nil {
 		return fmt.Errorf("invalid private key file")
@@ -154,10 +159,11 @@ func (s *RSAPrivate) FromFile(path, password string) error {
 
 	blockData := block.Bytes
 	if x509.IsEncryptedPEMBlock(block) {
-		blockData, err = x509.DecryptPEMBlock(block, []byte(password))
-		if err != err {
+		decodedBlockData, err := x509.DecryptPEMBlock(block, []byte(password))
+		if err != nil {
 			return fmt.Errorf("password invalid: %v", err)
 		}
+		blockData = decodedBlockData
 	}
 
 	key, err := x509.ParsePKCS1PrivateKey(blockData)
