@@ -130,3 +130,22 @@ func (s *RSAPublic) FromFile(path string) error {
 
 	return nil
 }
+
+func (s *RSAPublic) ToMemory() ([]byte, error) {
+	if s.key == nil {
+		return nil, fmt.Errorf("invalid key")
+	}
+
+	data, err := x509.MarshalPKIXPublicKey(s.key)
+	if err != nil {
+		return nil, err
+	}
+
+	block := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: data,
+	}
+
+	return pem.EncodeToMemory(block), nil
+
+}
