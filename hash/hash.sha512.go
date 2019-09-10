@@ -2,19 +2,19 @@ package hash
 
 import (
 	"crypto"
-	"hash/adler32"
+	"crypto/sha512"
 )
 
-type Adler struct {
+type Sha512 struct {
 	hash
 }
 
-func (s *Adler) Type() crypto.Hash {
-	return crypto.Hash(0)
+func (s *Sha512) Type() crypto.Hash {
+	return crypto.SHA512
 }
 
-func (s *Adler) Hash(data []byte) ([]byte, error) {
-	h := adler32.New()
+func (s *Sha512) Hash(data []byte) ([]byte, error) {
+	h := sha512.New()
 	_, err := h.Write(data)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (s *Adler) Hash(data []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func (s *Adler) HashToString(data []byte) (string, error) {
+func (s *Sha512) HashToString(data []byte) (string, error) {
 	hashed, err := s.Hash(data)
 	if err != nil {
 		return "", err

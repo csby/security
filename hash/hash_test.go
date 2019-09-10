@@ -16,7 +16,7 @@ func TestMd5_HashToString(t *testing.T) {
 }
 
 func TestCRC_HashToString(t *testing.T) {
-	h := &CRC{}
+	h := &Crc{}
 	r, e := h.HashToString([]byte(toHashData))
 	if e != nil {
 		t.Fatal(e)
